@@ -15,11 +15,10 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
 
   migration:
     build: .
-    container_name: ${PROJECT_NAME}_migration
     depends_on:
       db:
         condition: service_healthy
@@ -39,4 +38,7 @@ services:
     environment:
       - DB_HOST=db
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:8001:8001"
+
+volumes:
+  postgres_data:
