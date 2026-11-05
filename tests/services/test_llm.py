@@ -2,6 +2,8 @@
 
 import uuid
 
+import pytest
+
 from app.models.rag import ChatMessage, MessageRole
 from app.services.llm import LLMService
 
@@ -71,9 +73,6 @@ def test_client_is_created_lazily(monkeypatch):
     assert "client" not in service.__dict__
 
     monkeypatch.setattr("app.services.llm.settings.OPENAI_API_KEY", "")
-    try:
-        service.client
-    except RuntimeError as exc:
-        assert "OPENAI_API_KEY" in str(exc)
-    else:  # pragma: no cover - the guard must fire
-        raise AssertionError("client construction should fail without a key")
+
+    with pytest.raises(RuntimeError, match="OPENAI_API_KEY"):
+        _ = service.client

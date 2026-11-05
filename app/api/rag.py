@@ -20,7 +20,7 @@ from app.schemas.rag import (
     CreateCaseSchema, UpdateCaseSchema, CaseSchema,
     DocumentSchema, DocumentStatusSchema, DocumentDownloadSchema,
     CreateChatSchema, UpdateChatSchema, ChatSchema,
-    SendMessageSchema, ChatMessageSchema, ChatHistorySchema
+    SendMessageSchema, ChatHistorySchema
 )
 from app.tasks.ingestion import process_document_pipeline, process_inline_paste_pipeline, push_chat_history_to_qdrant, should_push_chat_history
 

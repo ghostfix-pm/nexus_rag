@@ -47,7 +47,7 @@ async def _build_points(
             f"{len(texts)} chunks, {len(dense_vecs)} dense vectors, {len(sparse_vecs)} sparse vectors"
         )
     points = []
-    for text, dense, sparse in zip(texts, dense_vecs, sparse_vecs):
+    for text, dense, sparse in zip(texts, dense_vecs, sparse_vecs, strict=True):
         points.append(PointStruct(
             id=str(uuid.uuid4()),
             vector={
@@ -214,7 +214,7 @@ async def push_chat_history_to_qdrant(chat_id: str):
 
             points = []
             for text, dense, sparse_vec, msg_ids, (user_msg, _) in zip(
-                pair_texts, dense_vecs, sparse_vecs, pair_message_ids, pairs
+                pair_texts, dense_vecs, sparse_vecs, pair_message_ids, pairs, strict=True
             ):
                 points.append(PointStruct(
                     id=str(uuid.uuid4()),

@@ -20,7 +20,6 @@ import tempfile
 os.environ.setdefault("JWT_SECRET_KEY", "test-secret-key-not-for-production")
 os.environ.setdefault("BACKEND_CORS_ORIGINS", '["http://localhost:3000"]')
 
-import pytest  # noqa: E402
 import pytest_asyncio  # noqa: E402
 from httpx import ASGITransport, AsyncClient  # noqa: E402
 from qdrant_client import AsyncQdrantClient  # noqa: E402
