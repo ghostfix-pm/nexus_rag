@@ -150,6 +150,7 @@ Run the API:
 uv sync
 alembic upgrade head
 fastapi dev app/main.py
+taskiq worker app.tkq:broker (for local machine only)
 ```
 
 Docs at `http://localhost:8000/docs`
