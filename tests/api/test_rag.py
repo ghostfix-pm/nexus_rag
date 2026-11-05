@@ -697,3 +697,55 @@ async def test_message_sequence_indexes_stay_contiguous(logged_in_client):
     body = history.json()
     assert [message["sequence_index"] for message in body["messages"]] == [0, 1, 2, 3]
     assert body["chat"]["message_count"] == 4
+
+
+@pytest.mark.asyncio
+async def test_sequence_stays_contiguous_when_a_stream_dies(logged_in_client):
+    """A turn that never produced an answer must not burn a sequence index."""
+    create = await logged_in_client.post("/api/v1/rag/cases", json={"title": "Broken Stream Case"})
+    case_id = create.json()["id"]
+    chat = await logged_in_client.post(f"/api/v1/rag/cases/{case_id}/chats", json={"title": "Chat"})
+    chat_id = chat.json()["id"]
+
+    retrieval_result = {
+        "document_chunks": [],
+        "chat_history_chunks": [],
+        "has_relevant_context": False,
+        "query_type": "new_question",
+        "exact_entity": None,
+        "doc_hint": None,
+        "sub_queries": ["query"],
+    }
+
+    async def empty_stream(*args, **kwargs):
+        if False:  # pragma: no cover - an async generator that yields nothing
+            yield ""
+
+    with patch("app.api.rag.retrieval_service.retrieve", new_callable=AsyncMock,
+               return_value=retrieval_result), \
+         patch("app.api.rag.retrieval_service.build_context_prompt", return_value=""), \
+         patch("app.api.rag.should_push_chat_history", new_callable=AsyncMock, return_value=False), \
+         patch("app.api.rag.llm_service.stream_response", side_effect=empty_stream):
+        first = await logged_in_client.post(
+            f"/api/v1/rag/cases/{case_id}/chats/{chat_id}/message",
+            json={"content": "First question?"}
+        )
+    assert first.status_code == 200
+
+    with patch("app.api.rag.retrieval_service.retrieve", new_callable=AsyncMock,
+               return_value=retrieval_result), \
+         patch("app.api.rag.retrieval_service.build_context_prompt", return_value=""), \
+         patch("app.api.rag.should_push_chat_history", new_callable=AsyncMock, return_value=False):
+        second = await logged_in_client.post(
+            f"/api/v1/rag/cases/{case_id}/chats/{chat_id}/message",
+            json={"content": "Second question?"}
+        )
+    assert second.status_code == 200
+
+    history = await logged_in_client.get(
+        f"/api/v1/rag/cases/{case_id}/chats/{chat_id}/messages"
+    )
+    body = history.json()
+    # user(0), user(1), assistant(2): the dead turn left no index behind.
+    assert [message["sequence_index"] for message in body["messages"]] == [0, 1, 2]
+    assert body["chat"]["message_count"] == 3
