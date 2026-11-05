@@ -20,7 +20,7 @@ async def lifespan(app: FastAPI):
     log.info("app_starting", project=settings.PROJECT_NAME)
     if not broker.is_worker_process:
         await broker.startup()
-    qdrant_service.ensure_collections() 
+    await qdrant_service.ensure_collections() 
     yield
     await engine.dispose()
     if not broker.is_worker_process:
